@@ -2,18 +2,47 @@
 
 namespace App\Controller;
 
+use App\Entity\Broker;
+use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
 class BrokerController extends AbstractController
 {
-    #[Route('/brokers', name: 'app_broker')]
-    public function index(): JsonResponse
+    #[Route('/brokers', name: 'broker_index', methods: ['GET'])]
+    public function index(ManagerRegistry $doctrine): JsonResponse
     {
-        return $this->json([
-            'message' => 'Welcome to your new controller!',
-            'path' => 'src/Controller/BrokerController.php',
-        ]);
+        $brokers = $doctrine->getRepository(Broker::class)->findAll();
+        $data = [];
+
+        foreach ($brokers as $broker) {
+            $data[] = [
+                'name' => $broker->getName(),
+                'address' => $broker->getAddress(),
+                'premium' => $broker->getPremium()
+            ];
+        }
+
+        return $this->json($data);
+    }
+
+
+    #[Route('/brokers', name: 'broker_create', methods: ['POST'])]
+    public function create(ManagerRegistry $doctrine, Request $request): JsonResponse
+    {
+        $entityManager = $doctrine->getManager();
+
+        $broker = new Broker();
+        $broker->setName($request->request->get('name'));
+        $broker->setAddress($request->request->get('address'));
+        $broker->setPremium($request->request->get('premium'));
+
+        $entityManager->persist($broker);
+        $entityManager->flush();
+        
+        return $this->json('New broker added with ID ' . $broker->getId());
     }
 }
