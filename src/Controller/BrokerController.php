@@ -7,7 +7,6 @@ use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
 class BrokerController extends AbstractController
@@ -25,6 +24,25 @@ class BrokerController extends AbstractController
                 'premium' => $broker->getPremium()
             ];
         }
+
+        return $this->json($data);
+    }
+
+
+    #[Route('/brokers/{id}', name: 'broker_show', methods: ['GET'])]
+    public function show(ManagerRegistry $doctrine, int $id): JsonResponse
+    {
+        $broker = $doctrine->getRepository(Broker::class)->find($id);
+
+        if (!$broker) {
+            throw $this->createNotFoundException('No broker found for id ' . $id);
+        }
+
+        $data = [
+            'name' => $broker->getName(),
+            'address' => $broker->getAddress(),
+            'premium' => $broker->getPremium()
+        ];
 
         return $this->json($data);
     }
