@@ -61,6 +61,44 @@ class BrokerController extends AbstractController
         $entityManager->persist($broker);
         $entityManager->flush();
         
-        return $this->json('New broker added with ID ' . $broker->getId());
+        return $this->json('New broker added with id ' . $broker->getId());
+    }
+
+
+    #[Route('/brokers/{id}', name: 'broker_update', methods: ['PUT', 'PATCH'])]
+    public function update(ManagerRegistry $doctrine, Request $request, int $id): JsonResponse
+    {
+        $entityManager = $doctrine->getManager();
+        $broker = $doctrine->getRepository(Broker::class)->find($id);
+
+        if (!$broker) {
+            throw $this->createNotFoundException('No broker found for id ' . $id);
+        }
+
+        $broker->setName($request->request->get('name'));
+        $broker->setAddress($request->request->get('address'));
+        $broker->setPremium($request->request->get('premium'));
+
+        $entityManager->persist($broker);
+        $entityManager->flush();
+
+        return $this->json('Broker with id ' . $id . ' has been updated');
+    }
+
+
+    #[Route('/brokers/{id}', name: 'broker_delete', methods: ['DELETE'])]
+    public function delete(ManagerRegistry $doctrine, int $id): JsonResponse
+    {
+        $entityManager = $doctrine->getManager();
+        $broker = $doctrine->getRepository(Broker::class)->find($id);
+
+        if (!$broker) {
+            throw $this->createNotFoundException('No broker found for id ' . $id);
+        }
+
+        $entityManager->remove($broker);
+        $entityManager->flush();
+
+        return $this->json('Broker with id ' . $id . ' has been deleted');
     }
 }
